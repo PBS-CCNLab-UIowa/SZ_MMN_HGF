@@ -3,6 +3,7 @@ Repository for Schizophrenia Mismatch Negativity Project Task Code
 
 Based on task from Charlton et al., 2025 Imaging Neuroscience 
 Paper: https://doi.org/10.1162/imag_a_00461
+
 Charlton et al. shared their task code with us. 
 JP modified task code to run on CCN lab EEG setup. 
 
@@ -24,9 +25,13 @@ Main folder: Task_Code
 
 Subfolders:
 data ~ contains behavioral data from visual distractor task
+
 design ~ contains design matrix, a mat file containing the 
+
 helper_functions ~ contains helper functions used in main task code
+
 stimuli ~ contains audio stimuli (same ones used in Charlton et al. 2025 paper)
+
 cogent2000v.132 ~ toolbox created by group in TNU (contains functions called in Charlton et al.'s origninal task code
 
 

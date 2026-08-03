@@ -33,7 +33,7 @@ cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN');
 rootPath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN';
 addpath(fullfile(rootPath, 'lib'));
 addpath(fullfile(rootPath, 'design'));
-addpath(fullfile(rooPath, 'stimuli'));
+addpath(fullfile(rootPath, 'stimuli'));
 
 disp('This is the MMN-volatility experiment');
 initializePsychToolBox;
@@ -82,3 +82,4 @@ MMN.triggers.visualDummy = 128;
 MMN.triggers.visualRight = 32;
 MMN.triggers.visualLeft = 64;
 MMN.triggers.tones = MMN.stimuli.audSequence;
+
