@@ -14,9 +14,20 @@ Major modifications:
 
 How to run task: 
 -------------------
-1. Set up Audio in EEG Room B. 
+I. Set up Audio in EEG Room B. 
 Plug in Headphones and change sound output to 
 'LG ULTRAGEAR -2'
+
+Directory Info: 
+-------------------
+Main folder: Task_Code
+
+Subfolders:
+data ~ contains behavioral data from visual distractor task
+design ~ contains design matrix, a mat file containing the 
+helper_functions ~ contains helper functions used in main task code
+stimuli ~ contains audio stimuli (same ones used in Charlton et al. 2025 paper)
+cogent2000v.132 ~ toolbox created by group in TNU (contains functions called in Charlton et al.'s origninal task code
 
 
 
