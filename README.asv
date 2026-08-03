@@ -1,11 +1,10 @@
 ## SZ_MMN_HGF
-Repository for Schizophrenia Mismatch Negativity Project Task Code
+Repository for Schizophrenia Mismatch Negativity Project 
 
 Based on task from Charlton et al., 2025 Imaging Neuroscience 
 Paper: https://doi.org/10.1162/imag_a_00461
 Charlton et al. shared their task code with us. 
 JP modified task code to run on CCN lab EEG setup. 
-
 Major modifications: 
 --------------------
 1. Changed EEG info to send triggers based on our setup
@@ -18,5 +17,5 @@ How to run task:
 Plug in Headphones and change sound output to 
 'LG ULTRAGEAR -2'
 
-
-
+2. Open Matlab and run script
+type 'MMN_EEG' in the matlab terminal
