@@ -29,11 +29,12 @@ clear;
 sca;
 
 %% setup -----------------------------------------------------------------
-cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN')
+cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN');
 rootPath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN';
-addpath(fullfile(rootPath, 'lib'))
-addpath(fullfile(rootpath, 'design'))
-addpath(fullfile(rootpath, 'stimuli'))
+addpath(fullfile(rootPath, 'lib'));
+addpath(fullfile(rootPath, 'design'));
+addpath(fullfile(rootPath, 'stimuli'));
+
 disp('This is the MMN-volatility experiment');
 initializePsychToolBox;
 
@@ -81,3 +82,29 @@ MMN.triggers.visualDummy = 128;
 MMN.triggers.visualRight = 32;
 MMN.triggers.visualLeft = 64;
 MMN.triggers.tones = MMN.stimuli.audSequence;
+
+
+
+%% Visual 
+
+% text (instructions)
+instrSize = 30;
+instrText = 'Geben Sie an, auf welcher Seite sich das Quadrat ?ffnet. /n/n/n/nDr?cken Sie eine beliebige Taste um zu starten.';
+abortText = 'Abbruch';
+endText = 'Ende';
+
+% fixation square
+fixSize = 15;                                                               % size of square side in pixels
+fixWidth = 2;
+fixCol = white;
+fixRect = [0 0 fixSize fixSize];
+fixCoords = CenterRectOnPointd(fixRect, xCenter, yCenter);
+
+% openings
+openWidth = 5;
+openCol = gray;
+openDist = fixSize - fixWidth;
+openLeftCoords = CenterRectOnPointd(fixRect, xCenter - openDist, yCenter);
+openRightCoords = CenterRectOnPointd(fixRect, xCenter + openDist, yCenter);
+
+

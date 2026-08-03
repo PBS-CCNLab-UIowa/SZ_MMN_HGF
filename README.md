@@ -7,6 +7,16 @@ Paper: https://doi.org/10.1162/imag_a_00461
 Charlton et al. shared their task code with us. 
 JP modified task code to run on CCN lab EEG setup. 
 
+JP TO DO List: (08/03/2026) ~ remove to do list once DONE
+-------------------
+I. Edit scripts to change triggers based on our own setup 
+
+II. Test & Confirm that triggers are being sent
+
+III. Pilot task with a test participant
+
+IV. Check quality of eeg data and confirm if triggers are sent correctly
+
 Major modifications: 
 --------------------
 1. Changed EEG info to send triggers based on our setup

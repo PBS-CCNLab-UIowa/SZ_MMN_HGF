@@ -11,9 +11,9 @@ switch scanner_mode
 end
 
 %% create unique name for saving results
-project_name = 'COMPI';
+project_name = 'SZ_MMN_HGF'; % changed project name 
 session.subject = subject;
-session.datetime = datestr(now,30);
+session.datetime = datetime("now")%datestr(now,30);
 folder = [project_name '_' subject];
 folder_path    = fullfile(cd,'behav_data', folder);
 

@@ -18,15 +18,18 @@
 % ears through headphones, they are told not to attend to the tones
 % -----------------------------------------------------------------------%
 function MMN_EEG()
-subject_id = 0;
-mode = 0;
-subject_id =input("Enter Subject Id: ")
-mode =input("Enter mode(1 for eeg, 0 for just behavior: ")
 
 %% housekeeping ----------------------------------------------------------
 clc; 
 clear; 
 sca;
+
+subject_id = 0;
+mode = 0;
+subject_id =input("Enter Subject Id: ")
+mode =input("Enter mode(1 for eeg, 0 for just behavior: ")
+
+
 
 %% setup -----------------------------------------------------------------
 cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN');
@@ -82,4 +85,29 @@ MMN.triggers.visualDummy = 128;
 MMN.triggers.visualRight = 32;
 MMN.triggers.visualLeft = 64;
 MMN.triggers.tones = MMN.stimuli.audSequence;
+
+
+
+%% Visual Stimuli ------------------------------------------------------
+
+% text (instructions)
+instrSize = 30;
+instrText = 'Please indicate which side the square has an opening?ffnet. /n/n/n/nDr?Press any button to start';
+abortText = 'Abort';
+endText = 'End';
+
+% fixation square
+fixSize = 15;                                                               % size of square side in pixels
+fixWidth = 2;
+fixCol = white;
+fixRect = [0 0 fixSize fixSize];
+fixCoords = CenterRectOnPointd(fixRect, xCenter, yCenter);
+
+% openings
+openWidth = 5;
+openCol = gray;
+openDist = fixSize - fixWidth;
+openLeftCoords = CenterRectOnPointd(fixRect, xCenter - openDist, yCenter);
+openRightCoords = CenterRectOnPointd(fixRect, xCenter + openDist, yCenter);
+
 
