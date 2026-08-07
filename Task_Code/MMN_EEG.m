@@ -1,10 +1,12 @@
+function MMN_EEG(subject, hand, scanner_mode)
+
 %% Script for Volatility MMN task 
 % based on task used in Charlton et al., 2025 paper in Imaging Neuroscience
 % modified by Joemari P., Last updated: August 3 2026
 
 % Task design: 
 % Auditory stimuli presented in the background through headphones
-% 2 tones: 528 & 440Hz, duration 70milliseconds, 5ms fadein, 5ms fadeout
+% 2 tones: 528 & 440Hz, duration 70 milliseconds, 5ms fadein, 5ms fadeout
 % systematic modulation of probability 
 % 1800 trials, 
 % ITI ~ 500ms 
@@ -17,7 +19,7 @@
 % opening in the right or left side, tones are passively played in their
 % ears through headphones, they are told not to attend to the tones
 % -----------------------------------------------------------------------%
-function MMN_EEG(subject, hand, scanner_mode)
+
 
 % to run script type in MatLab Terminal
 % 'MMN_EEG('subjectID', 'hand', 'scanner_mode')
@@ -31,14 +33,14 @@ rootpath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub
 addpath(fullfile(rootpath, 'helper_functions'))
 addpath(fullfile(rootpath, 'design'))
 addpath(fullfile(rootpath, 'stimuli'))
-addpath(fullfile(rootpath,'cogent2000v1.32/', 'Toolbox/')) 
+addpath(fullfile(rootpath,'cogent2000v1.32', 'Toolbox')) 
 KbName('UnifyKeyNames');
 
 session = setupSession(subject, hand, 'win', 'full', scanner_mode);
 MMN = createMMN(session,scanner_mode);
 
 %% ------------------------- initializing ----------------------------- %%
-cd 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code'
+cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code')
 disp('This is the MMN-volatility experiment');
 
 initializePsychToolBox;
@@ -55,6 +57,7 @@ MMN.triggers.tones = MMN.stimuli.audSequence; %%%% adjust triggers here
 % Initialize serial port
 if scanner_mode == 3
     IPI = 4;
+    % trigger info CCN Iowa
     targetPort = 'COM3';
     baudRate = 2000000;
     port = serialport(targetPort,baudRate);
@@ -67,7 +70,6 @@ if scanner_mode == 3
     pause(IPI);
     write(port, uint8(0), "uint8");
     disp(['Serial port connected on ' targetPort]);
-    sp = port;
 end
 
 [screen] = setupScreen;
@@ -78,6 +80,7 @@ initializeCogent(MMN);
 
 audios = createAuditoryStimuli(session);
 audios = initializeSounds(audios, MMN);
+
 
 %% ---------------------- start presentation -------------------------- %%
 % start screen
@@ -117,6 +120,15 @@ MMN.startLoop.Date      = datestr(now, 30);
 MMN.startLoop.GetSecs   = GetSecs;
 MMN.startLoop.Cogent    = time;
 
+% Responses: 
+MMN.responses.times = [];
+MMN.responses.keys = [];
+MMN.responses.trials = [];
+MMN.responses.keyboard = {};
+KbQueueCreate();
+KbQueueStart();
+
+
 
 %% ---------------------- main loop -------------------------- %%
 idx_resp = 1;
@@ -130,7 +142,7 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
     tic
     %send trigger
     if scanner_mode == 3
-        write(sp, MMN.triggers.tones(trial), 'uint8')
+        write(sp, MMN.triggers.tones(trial), 'uint8');
         wait(IPI);
         write(sp, 0, 'uint8')
     end
@@ -190,37 +202,10 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
     
     wait2(MMN.times.rest(trial));                                           % wait until ISI is over
 
-    % Record responses
-    readkeys;
-    [k, t]   = getkeydown([MMN.keys.left,MMN.keys.right,MMN.keys.escape]);
-    
-    % JG_ADD
-    
-    % Initialize these vars to avoid error lower down
-    k = [];  t = [];    
-    % While loop to pull all cedrus responses since last full
-    % cedrus_evt = CedrusResponseBox('GetButtons', cedrus_handle);
-    % while ~isempty(cedrus_evt)
-    % 
-    %     % compile all cedrus responses for the record
-    %     MMN.responses.cedrus{end+1} = cedrus_evt;
-    % 
-    %     % note: if multiple responses (including button press/release), 
-    %     % this will only record the last one. But all cedrus events info
-    %     % is kept in MMN.responses.cedrus.
-    %     k = cedrus_evt.raw; % left = 112, right = 113
-    %     t = cedrus_evt.rawtime;
-    % 
-    %     cedrus_evt = CedrusResponseBox('GetButtons', cedrus_handle);
-    % 
-    % end
-   %  now clear out cedrus responses
-   %  (this should be redundant after above while loop)
-   % ignoreme = CedrusResponseBox('FlushEvents', cedrus_handle);
-
-    
-    
-    if ~isempty(k)
+ readkeys;
+    k = [];  
+    t = [];  
+   if ~isempty(k)
         if any(k == MMN.keys.escape)
             DrawFormattedText(visuals.window, visuals.abortText, 'center', 'center', screen.black);
             Screen('Flip', visuals.window);
@@ -236,6 +221,47 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
         end
     end
 end
+
+
+    % Record responses
+    readkeys;
+    k = [];  
+    t = [];    
+    
+   % Pull all keyboard responses
+    [pressed, firstPress] = KbQueueCheck;
+
+    while pressed
+        key_indices = find(firstPress);
+
+        for idx = 1:length(key_indices)
+            k_raw = key_indices(idx);
+            t_raw = firstPress(k_raw);
+
+            % Map keys to codes
+            if k_raw == KbName('LeftArrow')
+                k(idx) = 112;
+            elseif k_raw == KbName('RightArrow')
+                k(idx) = 113;
+            elseif k_raw == KbName('ESCAPE')
+                k(idx) = MMN.keys.escape;
+            else
+                k(idx) = k_raw;
+            end
+
+            t(idx) = t_raw;
+
+            % Store detailed response info
+            MMN.responses.keyboard{end+1} = struct(...
+                'raw', k(idx), ...
+                'rawtime', t_raw, ...
+                'trial', trial, ...
+                'keyCode', k_raw);
+        end
+
+        [pressed, firstPress] = KbQueueCheck;
+    end
+
 
 % save end time of main loop
 MMN.stopLoop.Date       = datestr(now, 30);
