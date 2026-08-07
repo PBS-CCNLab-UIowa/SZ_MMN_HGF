@@ -9,11 +9,12 @@ JP modified task code to run on CCN lab EEG setup.
 
 JP TO DO List: (08/03/2026) ~ remove to do list once DONE
 -------------------
-I. Edit scripts to change triggers based on our own setup 
+I. Edit scripts to change triggers based on our own setup  -DONE - triggers 
+sending
 
-II. Test & Confirm that triggers are being sent
+II. Test & Confirm that triggers are being sent - DONE
 
-III. Pilot task with a test participant
+III. Pilot task with a test participant - Look for test participant
 
 IV. Check quality of eeg data and confirm if triggers are sent correctly
 
