@@ -19,6 +19,12 @@
 % -----------------------------------------------------------------------%
 function MMN_EEG(subject, hand, scanner_mode)
 
+% to run script type in MatLab Terminal
+% 'MMN_EEG('subjectID', 'hand', 'scanner_mode')
+% subjectID : string, type in subjectID as a string
+% hand: string, type in l for left and right 
+% scanner_mode: int, type in 3 for eeg to
+
 %% ---------------------- setting up session -------------------------- %%
 
 rootpath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code';
@@ -132,11 +138,9 @@ Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.f
 Screen('Flip', visuals.window);
 
 if scanner_mode == 3
-    %     io64(ioObj,address,MMN.triggers.start);
-    %sp.sendTrigger(MMN.triggers.start);
-    %wait(IPI);
-    %  io64(ioObj,address,0);
-   % sp.sendTrigger(0);
+    write(sp, MMN.triggers.start, 'uint8');
+    wait(IPI);
+    write(sp, 0, 'uint8');
 end
 
 % save start time of main loop
@@ -157,13 +161,9 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
     tic
     %send trigger
     if scanner_mode == 3
-        %sp.sendTrigger(MMN.triggers.tones(trial));
         write(sp, MMN.triggers.tones(trial), 'uint8')
-         %io64(ioObj,address,MMN.triggers.tones(trial));
         wait(IPI);
-        %  io64(ioObj,address, 0);
-	%sp.sendTrigger(0);
-    write(sp, 0, 'uint8')
+        write(sp, 0, 'uint8')
     end
     toc
     %Play tone & record time
@@ -190,13 +190,9 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
         MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
         
         if scanner_mode == 3
-           % sp.sendTrigger(MMN.triggers.visualRight);
-            write(sp, MMN.triggers.visualRight, 'uint8'); 
-            % io64(ioObj,address,MMN.triggers.visualRight);                       % set the trigger
+            write(sp, MMN.triggers.visualRight, 'uint8');                        % set the trigger
             wait(IPI);
-            % io64(ioObj,address, 0);
-	   % sp.sendTrigger(0);
-        write(sp, 0, 'uint8')
+            write(sp, 0, 'uint8')
         end
         
     elseif MMN.stimuli.visSequence(trial) == 2                              % open on the left
@@ -206,13 +202,9 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
         MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
         
         if scanner_mode == 3
-           % sp.sendTrigger(MMN.triggers.visualLeft);
-            write(sp, MMN.triggers.visualLeft, 'uint8');
-            % io64(ioObj,address,MMN.triggers.visualLeft);                       % set the trigger
+            write(sp, MMN.triggers.visualLeft, 'uint8');                      % set the trigger
             wait(IPI);
-            % io64(ioObj,address, 0);
             write(sp, 0, 'uint8')
-	    %sp.sendTrigger(0);
         end
         
     elseif MMN.stimuli.visSequence(trial) == 0                              % don't open, dummy flip
@@ -221,13 +213,9 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
         MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
         
         if scanner_mode == 3
-           % sp.sendTrigger(MMN.triggers.visualDummy);
-            write(sp, MMN.triggers.visualDummy, 'uint8');
-            %  io64(ioObj,address,MMN.triggers.visualDummy);                       % set the trigger
+            write(sp, MMN.triggers.visualDummy, 'uint8');                     % set the trigger
             wait(IPI);
-            %  io64(ioObj,address, 0);
-	    %sp.sendTrigger(0);
-        write(sp, 0, 'uint8')
+            write(sp, 0, 'uint8')
         end
     end
     
@@ -237,8 +225,7 @@ for trial = 1:length(MMN.stimuli.audSequence) - 1
     Screen('Flip', visuals.window);
     
     wait2(MMN.times.rest(trial));                                           % wait until ISI is over
-    
-    % JG_MOD
+
     % Record responses
     readkeys;
     [k, t]   = getkeydown([MMN.keys.left,MMN.keys.right,MMN.keys.escape]);

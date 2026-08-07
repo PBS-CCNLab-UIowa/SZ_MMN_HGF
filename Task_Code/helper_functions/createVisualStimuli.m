@@ -4,11 +4,11 @@ visuals.window = screen.window;
 
 % text (instructions)
 visuals.instrSize = 15; %25 CHANGED to fit things on screen
-visuals.instrText = 'Geben Sie an, auf welcher Seite sich das Quadrat oeffnet. \n\n\n\n Warten Sie, bis es losgeht.';
-visuals.abortText = 'Abbruch';
-visuals.waitText = 'Bitte warten...';
-visuals.pressText = 'Ende: Bitte druecken Sie jetzt eine beliebige Taste, um die Messung zu beenden.';
-visuals.endText = 'Vielen Dank!';
+visuals.instrText = 'Indicate which side the square has an opening. \n\n\n\n Please wait until it starts';
+visuals.abortText = 'Abort';
+visuals.waitText = 'Please wait...';
+visuals.pressText = 'End: Please press any key now to end.';
+visuals.endText = 'Thank you!';
 
 % fixation square
 visuals.fixSize = 30;                                                       % size of square side in pixels
