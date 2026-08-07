@@ -1,7 +1,8 @@
 % connect to the EEG amp
 function [port, isConnected] = connectToEEG()
     port = [];
-    targetPort = 'COM4';
+   % targetPort = 'COM4';
+    targetPort = 'COM3';
     baudRate = 2000000;
         
     % connect to the port if we can

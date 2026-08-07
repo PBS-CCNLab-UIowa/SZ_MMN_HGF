@@ -17,66 +17,28 @@
 % opening in the right or left side, tones are passively played in their
 % ears through headphones, they are told not to attend to the tones
 % -----------------------------------------------------------------------%
-function MMN_EEG()
+function MMN_EEG(subject, hand, scanner_mode)
 
-%% housekeeping ----------------------------------------------------------
-clc; 
-clear; 
-sca;
+%% ---------------------- setting up session -------------------------- %%
 
-subject_id = 0;
-mode = 0;
-subject_id =input("Enter Subject Id: ")
-mode =input("Enter mode(1 for eeg, 0 for just behavior: ")
+rootpath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code';
+addpath(fullfile(rootpath, 'helper_functions'))
+addpath(fullfile(rootpath, 'design'))
+addpath(fullfile(rootpath, 'stimuli'))
+addpath(fullfile(rootpath,'cogent2000v1.32/', 'Toolbox/')) 
+KbName('UnifyKeyNames');
 
+session = setupSession(subject, hand, 'win', 'full', scanner_mode);
+MMN = createMMN(session,scanner_mode);
 
+%% ------------------------- initializing ----------------------------- %%
 
-%% setup -----------------------------------------------------------------
-cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN');
-rootPath = 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN';
-addpath(fullfile(rootPath, 'lib'));
-addpath(fullfile(rootPath, 'design'));
-addpath(fullfile(rootPath, 'stimuli'));
-
+%cd(session.expPath)
+cd('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Desktop\MMN')
 disp('This is the MMN-volatility experiment');
+
 initializePsychToolBox;
 
-
-Screen('Preference', 'SkipSyncTests', 0); %%% CHANGE
-
-screens = Screen('Screens');                                                % get screen numbers
-screenNumber = max(screens);                                                % draw to external screen
-
-screen.black = BlackIndex(screenNumber);
-screen.white = WhiteIndex(screenNumber);
-screen.gray = screen.white/2;
-
-[screen.window, windowRect] = PsychImaging('OpenWindow', screenNumber, screen.gray, [], 32, 2); %,...
-%    [], [],  kPsychNeed32BPCFloat);     
-Screen('Flip', screen.window);
-
-[screenXpixels, screenYpixels] = Screen('WindowSize', screen.window);              % size of screen in pixels
-[screen.xCenter, screen.yCenter] = RectCenter(windowRect);                                % center of screen in pixels
-
-Screen('BlendFunction', screen.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');  % set up alpha-blending for smooth (anti-aliased) lines
-
-
-HideCursor(screenNumber); % Hide Cursor
-
-% connect to the EEG amp ------------------------------------------------
-
-if mode == 1 % if running eeg 
-[port, eeg_connected] = connectToEEG();
-if eeg_connected == 0
-    isNoEEG_OK = input('EEG amplifier not connected. Press "y" to continue anyway\n', 's');
-    if ~strcmp(isNoEEG_OK, 'y')
-        disp('Terminating due to failed EEG connection');
-        return;
-    end
-end
-end
-
-% Initialize Triggers ---------------------------------------------------
 %Initialize triggers
 MMN.triggers.test = 99;
 MMN.triggers.start = 1;
@@ -84,30 +46,344 @@ MMN.triggers.instructions = 4;
 MMN.triggers.visualDummy = 128;
 MMN.triggers.visualRight = 32;
 MMN.triggers.visualLeft = 64;
-MMN.triggers.tones = MMN.stimuli.audSequence;
+MMN.triggers.tones = MMN.stimuli.audSequence; %%%% adjust triggers here
+
+% Initialize parallel port
+if scanner_mode == 3
+    %     ioObj = io64;
+    %     status = io64(ioObj);
+    % %     address = hex2dec('378');
+     %sp = BioSemiSerialPort(); % open serial port
+    IPI = 4;
+    % %     io64(ioObj,address,MMN.triggers.test);   %output command
+    targetPort = 'COM3';
+    baudRate = 2000000;
+    port = serialport(targetPort,baudRate);
+    sp = port;
+   % sp.sendTrigger(MMN.triggers.test);
+   write(sp, MMN.triggers.test, 'uint8')
+   wait(4);
+     %wait(IPI);
+    % %     io64(ioObj,address,0);
+    % sp.sendTrigger(0);
+    %     sp.findSerialPortName % -> said port is COM4, so changed port name in BioSemiSerialPort.m
+%    sp.testTriggers
+    addpath('C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code');
+   
+    
+    IPI = 0.004;  % 4ms in seconds
+    write(port, uint8(MMN.triggers.test), "uint8");
+    pause(IPI);
+    write(port, uint8(0), "uint8");
+    disp(['Serial port connected on ' targetPort]);
+    sp = port;
+end
+
+[screen] = setupScreen;
+visuals = createVisualStimuli(screen);
+
+config_keyboard(5,1,'nonexclusive'); % Set up key board
+initializeCogent(MMN);
+
+audios = createAuditoryStimuli(session);
+audios = initializeSounds(audios, MMN);
+
+
+% JG_ADD
+%cedrus_handle = CedrusResponseBox('Open', 'COM6');
+%cedrus_handle = CedrusResponseBox('Open', 'COM3');
+
+% JG_ADD
+%MMN.responses.cedrus = {}; % collecting all cedrus response box data, in 
+                           % case we need to modify timing and event
+                           % definitions at analysis stage
+
+
+%% ---------------------- start presentation -------------------------- %%
+% start screen
+Screen('TextSize', visuals.window, visuals.instrSize);
+MMN.startScreen.Date       = datestr(now, 30);
+MMN.startScreen.GetSecs    = GetSecs;
+MMN.startScreen.Cogent     = time;
+
+% instructions
+DrawFormattedText(visuals.window, visuals.instrText, 'center', 'center', screen.black);
+Screen('Flip', visuals.window);
+
+if scanner_mode == 3
+   %sp.sendTrigger(MMN.triggers.instructions);
+    write(sp, MMN.triggers.instructions, 'uint8')
+    % io64(ioObj,address,MMN.triggers.instructions); 
+    % tone actually starts 25ms later!!!
+    wait(IPI); 
+    % duration of the trigger
+    % io64(ioObj,address,0);
+   % sp.sendTrigger(0);
+    write(sp, 0, 'uint8')
+
+end
+% connectToEEG;
+
+% wait for an experimenter button press
+KbStrokeWait;
+
+% start with center square
+Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.fixWidth);
+Screen('Flip', visuals.window);
+
+if scanner_mode == 3
+    %     io64(ioObj,address,MMN.triggers.start);
+    %sp.sendTrigger(MMN.triggers.start);
+    %wait(IPI);
+    %  io64(ioObj,address,0);
+   % sp.sendTrigger(0);
+end
+
+% save start time of main loop
+MMN.startLoop.Date      = datestr(now, 30);
+MMN.startLoop.GetSecs   = GetSecs;
+MMN.startLoop.Cogent    = time;
+
+
+%% ---------------------- main loop -------------------------- %%
+idx_resp = 1;
+clearkeys;
+readkeys;
+
+
+for trial = 1:length(MMN.stimuli.audSequence) - 1
+    %load tone
+    nexttone = MMN.stimuli.audSequence(trial + 1);
+    tic
+    %send trigger
+    if scanner_mode == 3
+        %sp.sendTrigger(MMN.triggers.tones(trial));
+        write(sp, MMN.triggers.tones(trial), 'uint8')
+         %io64(ioObj,address,MMN.triggers.tones(trial));
+        wait(IPI);
+        %  io64(ioObj,address, 0);
+	%sp.sendTrigger(0);
+    write(sp, 0, 'uint8')
+    end
+    toc
+    %Play tone & record time
+    
+    % IS THIS WHERE THE ERROR COMES IN?
+    %'ERROR HERE' 
+    
+    MMN.stimuli.startTimes(trial) = PsychPortAudio('Start', audios.pahandle, 1, 0, 1); % tone of 1st trial is already in the buffer
+    MMN.stimuli.audTimes(trial) = GetSecs - MMN.startLoop.GetSecs;           % START sec of tone presentation
+    
+    %blah
+    
+    %Update buffer
+    PsychPortAudio('FillBuffer', audios.pahandle, audios.buffer(nexttone));
+    
+    wait2(MMN.times.SOT(trial));                                            % stimulus onset time
+    
+    
+    % draw new visual screens
+    if MMN.stimuli.visSequence(trial) == 1                                  % open on the right
+        Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.fixWidth);
+        Screen('FrameRect', visuals.window, visuals.openCol, visuals.openRightCoords, visuals.openWidth);
+        Screen('Flip', visuals.window);
+        MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
+        
+        if scanner_mode == 3
+           % sp.sendTrigger(MMN.triggers.visualRight);
+            write(sp, MMN.triggers.visualRight, 'uint8'); 
+            % io64(ioObj,address,MMN.triggers.visualRight);                       % set the trigger
+            wait(IPI);
+            % io64(ioObj,address, 0);
+	   % sp.sendTrigger(0);
+        write(sp, 0, 'uint8')
+        end
+        
+    elseif MMN.stimuli.visSequence(trial) == 2                              % open on the left
+        Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.fixWidth);
+        Screen('FrameRect', visuals.window, visuals.openCol, visuals.openLeftCoords, visuals.openWidth);
+        Screen('Flip', visuals.window);
+        MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
+        
+        if scanner_mode == 3
+           % sp.sendTrigger(MMN.triggers.visualLeft);
+            write(sp, MMN.triggers.visualLeft, 'uint8');
+            % io64(ioObj,address,MMN.triggers.visualLeft);                       % set the trigger
+            wait(IPI);
+            % io64(ioObj,address, 0);
+            write(sp, 0, 'uint8')
+	    %sp.sendTrigger(0);
+        end
+        
+    elseif MMN.stimuli.visSequence(trial) == 0                              % don't open, dummy flip
+        Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.fixWidth);
+        Screen('Flip', visuals.window);
+        MMN.stimuli.visTimes(trial) = GetSecs - MMN.startLoop.GetSecs;
+        
+        if scanner_mode == 3
+           % sp.sendTrigger(MMN.triggers.visualDummy);
+            write(sp, MMN.triggers.visualDummy, 'uint8');
+            %  io64(ioObj,address,MMN.triggers.visualDummy);                       % set the trigger
+            wait(IPI);
+            %  io64(ioObj,address, 0);
+	    %sp.sendTrigger(0);
+        write(sp, 0, 'uint8')
+        end
+    end
+    
+    % go back to closed square after stimulus duration
+    wait2(MMN.times.visDuration - 5);
+    Screen('FrameRect', visuals.window, visuals.fixCol, visuals.fixCoords, visuals.fixWidth);
+    Screen('Flip', visuals.window);
+    
+    wait2(MMN.times.rest(trial));                                           % wait until ISI is over
+    
+    % JG_MOD
+    % Record responses
+    readkeys;
+    [k, t]   = getkeydown([MMN.keys.left,MMN.keys.right,MMN.keys.escape]);
+    
+    % JG_ADD
+    
+    % Initialize these vars to avoid error lower down
+    k = [];  t = [];    
+    % While loop to pull all cedrus responses since last full
+    % cedrus_evt = CedrusResponseBox('GetButtons', cedrus_handle);
+    % while ~isempty(cedrus_evt)
+    % 
+    %     % compile all cedrus responses for the record
+    %     MMN.responses.cedrus{end+1} = cedrus_evt;
+    % 
+    %     % note: if multiple responses (including button press/release), 
+    %     % this will only record the last one. But all cedrus events info
+    %     % is kept in MMN.responses.cedrus.
+    %     k = cedrus_evt.raw; % left = 112, right = 113
+    %     t = cedrus_evt.rawtime;
+    % 
+    %     cedrus_evt = CedrusResponseBox('GetButtons', cedrus_handle);
+    % 
+    % end
+   %  now clear out cedrus responses
+   %  (this should be redundant after above while loop)
+   % ignoreme = CedrusResponseBox('FlushEvents', cedrus_handle);
+
+    
+    
+    if ~isempty(k)
+        if any(k == MMN.keys.escape)
+            DrawFormattedText(visuals.window, visuals.abortText, 'center', 'center', screen.black);
+            Screen('Flip', visuals.window);
+            PsychPortAudio('DeleteBuffer');
+            PsychPortAudio('Close');
+            stop_cogent;
+            sca;
+            return;
+        else
+            MMN.responses.times(idx_resp)   = (t(1) - MMN.startLoop.Cogent)/1000;
+            MMN.responses.keys(idx_resp)    = k(1);
+            idx_resp = idx_resp + 1;
+        end
+    end
+end
+
+% save end time of main loop
+MMN.stopLoop.Date       = datestr(now, 30);
+MMN.stopLoop.GetSecs    = GetSecs - MMN.startLoop.GetSecs;
+MMN.stopLoop.Cogent     = time - MMN.startLoop.Cogent;
 
 
 
-%% Visual Stimuli ------------------------------------------------------
+%% ------------- response time correction and warning ----------------- %%
+% correct start times
+MMN.stimuli.startTimes = MMN.stimuli.startTimes - MMN.startLoop.GetSecs;
+MMN.responses.dummy = MMN.responses.keys == MMN.keys.right;
+MMN.responses.dummy = MMN.responses.dummy + (MMN.responses.keys == MMN.keys.left)*2;
 
-% text (instructions)
-instrSize = 30;
-instrText = 'Please indicate which side the square has an opening?ffnet. /n/n/n/nDr?Press any button to start';
-abortText = 'Abort';
-endText = 'End';
 
-% fixation square
-fixSize = 15;                                                               % size of square side in pixels
-fixWidth = 2;
-fixCol = white;
-fixRect = [0 0 fixSize fixSize];
-fixCoords = CenterRectOnPointd(fixRect, xCenter, yCenter);
+% Output warning, when they where no responses
+if isempty(MMN.responses.times )
+    warning('NO RESPONSES RECORDED!');
+    MMN.responses.times     = NaN;
+    MMN.responses.keys      = NaN;
+end
 
-% openings
-openWidth = 5;
-openCol = gray;
-openDist = fixSize - fixWidth;
-openLeftCoords = CenterRectOnPointd(fixRect, xCenter - openDist, yCenter);
-openRightCoords = CenterRectOnPointd(fixRect, xCenter + openDist, yCenter);
+% JG_ADD 
+disp('')
+disp('')
+disp('session basename')
+disp(session.baseName)
+disp('cwd')
+disp(pwd)
 
+% JG_ADD - HACKY!
+outdir = fullfile(pwd,fileparts(session.baseName));
+if exist(outdir) ~=7
+    mkdir(outdir)
+end
+
+% security save at this point
+save(session.baseName, 'MMN');
+
+% please wait screen
+DrawFormattedText(visuals.window, visuals.waitText, 'center', 'center', screen.black);
+Screen('Flip', visuals.window);
+
+
+%% ------------- timing check ----------------- %%
+% measure time once again, to compare
+clearkeys;
+
+% please press button screen
+DrawFormattedText(visuals.window, visuals.pressText, 'center', 'center', screen.black);
+Screen('Flip', visuals.window);
+
+% wait for an experimenter button press
+KbStrokeWait;
+
+% save stop time
+MMN.stopScreen.Date     = datestr(now, 30);
+MMN.stopScreen.GetSecs  = GetSecs;
+MMN.stopScreen.Cogent   = time; % this is cogent time
+
+
+%% ------------- goodbye ----------------- %%
+
+% goodbye screen
+DrawFormattedText(visuals.window, visuals.endText, 'center', 'center', screen.black);
+Screen('Flip', visuals.window);
+
+
+% save all data in workspace
+
+disp('session basename')
+disp(session.baseName)
+disp('cwd')
+disp(pwd)
+
+% JG_ADD - HACKY!
+outdir = fullfile(pwd,fileparts(session.baseName));
+if exist(outdir) ~=7
+    mkdir(outdir)
+end
+
+save(session.baseName, 'MMN');
+
+%% ---------------------- shut down ------------------------ %%
+
+% Wait for end of playback, then stop:
+PsychPortAudio('Stop', audios.pahandle, 1);
+
+% Delete all dynamic audio buffers:
+PsychPortAudio('DeleteBuffer');
+
+% Close audio device, shutdown driver:
+PsychPortAudio('Close');
+
+% Close all screens
+sca;
+
+% Stop cogent
+stop_cogent;
+
+end
 

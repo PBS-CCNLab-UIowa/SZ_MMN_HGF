@@ -17,6 +17,8 @@ III. Pilot task with a test participant
 
 IV. Check quality of eeg data and confirm if triggers are sent correctly
 
+V. (Maybe) make version of task that is just behavior only?
+
 Major modifications: 
 --------------------
 1. Changed EEG info to send triggers based on our setup
