@@ -38,7 +38,6 @@ session = setupSession(subject, hand, 'win', 'full', scanner_mode);
 MMN = createMMN(session,scanner_mode);
 
 %% ------------------------- initializing ----------------------------- %%
-cd 'C:\Users\Cockburn_Lab\OneDrive - University of Iowa\Documents\GitHub\SZ_MMN_HGF\Task_Code'
 disp('This is the MMN-volatility experiment');
 
 initializePsychToolBox;
