@@ -126,8 +126,8 @@ MMN.responses.keys = [];
 MMN.responses.trials = [];
 MMN.responses.keyboard = {};
 ListenChar(2);
-% KbQueueCreate();
-% KbQueueStart();
+KbQueueCreate();
+KbQueueStart();
 
 
 
